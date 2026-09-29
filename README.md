@@ -80,6 +80,11 @@ swift test         # unit tests (version comparison, feed & catalog parsing)
 swift run Upnext   # run without bundling (notifications and login item need the bundled app)
 ```
 
+If a command fails with *"Could not initialize build system … Unknown error parsing
+property list"*, your toolchain is using Xcode's build system. Add
+`--build-system native` (e.g. `swift run --build-system native Upnext`) and
+delete the `.build` folder once. `scripts/build-app.sh` does this automatically.
+
 Or open `Package.swift` in Xcode and press ⌘R.
 
 ## Project layout

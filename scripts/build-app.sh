@@ -14,9 +14,27 @@ APP="$ROOT/build/Upnext.app"
 MAKE_DMG=0
 [[ "${1:-}" == "--dmg" ]] && MAKE_DMG=1
 
+if [[ "$(sysctl -n hw.optional.arm64 2>/dev/null)" != "1" ]]; then
+    echo "Upnext is built for Apple silicon Macs." >&2
+    exit 1
+fi
+if [[ "$(uname -m)" != "arm64" ]]; then
+    echo "This Terminal is running under Rosetta; building an Intel binary would be wrong." >&2
+    echo "Quit Terminal, untick “Open using Rosetta” in its Get Info window, and retry." >&2
+    exit 1
+fi
+
+# Use SwiftPM's own build system. Passing --arch, or newer toolchains' default,
+# routes through Xcode's build system, which fails on some Xcode versions with
+# "Could not initialize build system … Unknown error parsing property list".
+BUILD_FLAGS=(-c release)
+if swift build --help 2>/dev/null | grep -q -- "--build-system"; then
+    BUILD_FLAGS+=(--build-system native)
+fi
+
 echo "==> Compiling (arm64, release)"
-swift build -c release --arch arm64
-BIN="$(swift build -c release --arch arm64 --show-bin-path)/Upnext"
+swift build "${BUILD_FLAGS[@]}"
+BIN="$(swift build "${BUILD_FLAGS[@]}" --show-bin-path)/Upnext"
 
 echo "==> Assembling $APP"
 rm -rf "$APP"
