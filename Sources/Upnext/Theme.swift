@@ -3,12 +3,12 @@ import SwiftUI
 
 /// Colours from the app icon (Design/AppIcon.svg).
 enum Brand {
-    /// The icon's arrow.
-    static let blue = Color(red: 0x6F / 255, green: 0xA8 / 255, blue: 0xF5 / 255)
+    /// The icon's arrow (same green as Upkeep).
+    static let green = Color(red: 0x7C / 255, green: 0xC4 / 255, blue: 0x7F / 255)
     /// The icon's tile, top and bottom.
     static let graphiteTop = Color(red: 0x2C / 255, green: 0x2C / 255, blue: 0x2E / 255)
     static let graphiteBottom = Color(red: 0x1F / 255, green: 0x1F / 255, blue: 0x21 / 255)
-    /// Dark text on blue buttons (white on this blue is too low-contrast).
+    /// Dark text on green buttons (white on this green is too low-contrast).
     static let ink = Color(red: 0x0B / 255, green: 0x14 / 255, blue: 0x22 / 255)
 
     static let cardFill = Color.white.opacity(0.045)
@@ -85,7 +85,7 @@ extension View {
 
 // MARK: - Button styles
 
-/// Rounded pill button. Prominent = the icon's blue; otherwise frosted glass.
+/// Rounded pill button. Prominent = the icon's green; otherwise frosted glass.
 struct PillButtonStyle: ButtonStyle {
     var prominent = false
 
@@ -106,7 +106,7 @@ struct PillButtonStyle: ButtonStyle {
                 .padding(.vertical, 5)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(prominent ? AnyShapeStyle(Brand.blue) : AnyShapeStyle(Color.white.opacity(0.09)))
+                        .fill(prominent ? AnyShapeStyle(Brand.green) : AnyShapeStyle(Color.white.opacity(0.09)))
                 )
                 .overlay(
                     Capsule(style: .continuous)
@@ -119,7 +119,7 @@ struct PillButtonStyle: ButtonStyle {
     }
 }
 
-/// Plain blue text, like a link.
+/// Plain green text, like a link.
 struct LinkButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         LinkBody(configuration: configuration)
@@ -131,7 +131,7 @@ struct LinkButtonStyle: ButtonStyle {
 
         var body: some View {
             configuration.label
-                .foregroundStyle(Brand.blue)
+                .foregroundStyle(Brand.green)
                 .opacity(isEnabled ? (configuration.isPressed ? 0.6 : 1) : 0.4)
                 .contentShape(Rectangle())
                 .pointingHandCursor(isEnabled)

@@ -226,12 +226,12 @@ struct AppIconImage: View {
     }
 }
 
-/// The app icon (Design/AppIcon.svg) drawn small: graphite tile, blue arrow
+/// The app icon (Design/AppIcon.svg) drawn small: graphite tile, green arrow
 /// over a baseline.
 struct LogoMark: View {
     let size: CGFloat
 
-    static let glyphColor = Color(red: 0x6F / 255, green: 0xA8 / 255, blue: 0xF5 / 255)
+    static let glyphColor = Color(red: 0x7C / 255, green: 0xC4 / 255, blue: 0x7F / 255)
 
     var body: some View {
         RoundedRectangle(cornerRadius: size * 0.226, style: .continuous)
