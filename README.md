@@ -140,6 +140,7 @@ Sources/
     ReleaseNotesView.swift
     SettingsView.swift
 UpnextWidget.xcodeproj   Xcode app-extension target for the widget
+Design/AppIcon.svg       the app icon (scripts/make-icon.py renders it to Resources/AppIcon.png)
 Resources/               Info.plists, widget entitlements, AppIcon.png
 scripts/build-app.sh     builds and signs Upnext.app (and optionally a DMG)
 ```

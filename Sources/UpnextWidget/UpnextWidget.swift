@@ -226,20 +226,41 @@ struct AppIconImage: View {
     }
 }
 
-/// The app icon's arrow, drawn small.
+/// The app icon (Design/AppIcon.svg) drawn small: graphite tile, blue arrow
+/// over a baseline.
 struct LogoMark: View {
     let size: CGFloat
 
+    static let glyphColor = Color(red: 0x6F / 255, green: 0xA8 / 255, blue: 0xF5 / 255)
+
     var body: some View {
-        RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+        RoundedRectangle(cornerRadius: size * 0.226, style: .continuous)
             .fill(LinearGradient(
-                colors: [Color(red: 0.15, green: 0.78, blue: 0.85), Color(red: 0.31, green: 0.27, blue: 0.90)],
+                colors: [Color(red: 0x2C / 255, green: 0x2C / 255, blue: 0x2E / 255),
+                         Color(red: 0x1F / 255, green: 0x1F / 255, blue: 0x21 / 255)],
                 startPoint: .top, endPoint: .bottom))
-            .frame(width: size, height: size)
             .overlay(
-                Image(systemName: "arrow.up")
-                    .font(.system(size: size * 0.55, weight: .bold))
-                    .foregroundStyle(.white)
+                RoundedRectangle(cornerRadius: size * 0.226, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
             )
+            .overlay(ArrowGlyph().stroke(Self.glyphColor, style: StrokeStyle(
+                lineWidth: size * 0.053, lineCap: .round, lineJoin: .round)))
+            .frame(width: size, height: size)
+    }
+}
+
+/// The icon's glyph on a unit square (824-point tile coordinates / 824).
+struct ArrowGlyph: Shape {
+    func path(in rect: CGRect) -> Path {
+        // Icon tile spans 100…924 on the 1024 grid.
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + (x - 100) / 824 * rect.width,
+                    y: rect.minY + (y - 100) / 824 * rect.height)
+        }
+        var path = Path()
+        path.move(to: p(512, 648)); path.addLine(to: p(512, 312))
+        path.move(to: p(370, 454)); path.addLine(to: p(512, 312)); path.addLine(to: p(654, 454))
+        path.move(to: p(364, 736)); path.addLine(to: p(660, 736))
+        return path
     }
 }

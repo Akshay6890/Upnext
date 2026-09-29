@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Upnext</title>
+  <defs>
+    <!-- Soft macOS-style drop shadow under the tile -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="14"/>
+      <feOffset dy="10" result="blur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.35"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Very subtle top-to-bottom tone so the tile doesn't look flat at small sizes -->
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2C2C2E"/>
+      <stop offset="1" stop-color="#1F1F21"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Tile: 824×824 on the 1024 macOS icon grid -->
+  <g filter="url(#shadow)">
+    <rect x="100" y="100" width="824" height="824" rx="186" ry="186" fill="url(#tile)"/>
+    <rect x="101.5" y="101.5" width="821" height="821" rx="184.5" ry="184.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="3"/>
+  </g>
+
+  <!-- Up arrow over a baseline: "what's up next" -->
+  <g fill="none" stroke="#6FA8F5" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M512 648 L512 312"/>
+    <path d="M370 454 L512 312 L654 454"/>
+    <path d="M364 736 L660 736"/>
+  </g>
+</svg>
