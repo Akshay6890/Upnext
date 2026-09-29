@@ -17,28 +17,51 @@ public struct HomebrewCask: Equatable, Sendable {
     /// True when the cask ships a .pkg rather than an .app to drag in.
     public var installsPkg: Bool
 
-    /// The human-facing part of the version ("4.2.1" for "4.2.1,1234").
+    /// Bundle identifiers the cask mentions (from `uninstall quit:` and
+    /// preference files in `zap trash:`), for apps whose file name differs.
+    public var bundleIdentifiers: [String] = []
+
+    /// The human-facing part of the version: "4.2.1" for "4.2.1,1234", and
+    /// "3.6.6" for "3.6.6-8b85519e" (a trailing commit hash is noise).
     public var displayVersion: String {
-        String(version.split(separator: ",").first ?? Substring(version))
+        var v = String(version.split(separator: ",").first ?? Substring(version))
+        if let dash = v.lastIndex(of: "-") {
+            let tail = v[v.index(after: dash)...]
+            if tail.count >= 7, tail.allSatisfy(\.isHexDigit) { v = String(v[..<dash]) }
+        }
+        return v
     }
 }
 
 public struct HomebrewCatalog: Sendable {
     public private(set) var casksByAppName: [String: HomebrewCask] = [:]
+    public private(set) var casksByBundleID: [String: HomebrewCask] = [:]
 
     public init(casks: [HomebrewCask]) {
+        // Prefer the plain cask over variants like "foo@beta".
+        func better(_ new: HomebrewCask, than existing: HomebrewCask?) -> Bool {
+            guard let existing else { return true }
+            return existing.token.contains("@") && !new.token.contains("@")
+        }
         for cask in casks {
             for app in cask.appNames {
                 let key = app.lowercased()
-                // Prefer the plain cask over variants like "foo@beta".
-                if let existing = casksByAppName[key], !existing.token.contains("@") { continue }
-                casksByAppName[key] = cask
+                if better(cask, than: casksByAppName[key]) { casksByAppName[key] = cask }
+            }
+            for id in cask.bundleIdentifiers {
+                let key = id.lowercased()
+                if better(cask, than: casksByBundleID[key]) { casksByBundleID[key] = cask }
             }
         }
     }
 
     public func cask(forAppNamed bundleName: String) -> HomebrewCask? {
         casksByAppName[bundleName.lowercased()]
+    }
+
+    /// Looks an app up by file name first, then by bundle identifier.
+    public func cask(forAppNamed bundleName: String, bundleIdentifier: String) -> HomebrewCask? {
+        cask(forAppNamed: bundleName) ?? casksByBundleID[bundleIdentifier.lowercased()]
     }
 
     /// Parses the Homebrew cask API JSON. `platformKey` selects a variation
@@ -67,17 +90,24 @@ public struct HomebrewCatalog: Sendable {
               let url = URL(string: urlString) else { return nil }
 
         var appNames: [String] = []
+        var bundleIDs: [String] = []
         var installsPkg = false
         for artifact in fields["artifacts"] as? [[String: Any]] ?? [] {
             if let apps = artifact["app"] as? [Any] {
                 appNames.append(contentsOf: appBundleNames(from: apps))
             }
             if artifact["pkg"] != nil { installsPkg = true }
+            for directive in (artifact["uninstall"] as? [[String: Any]] ?? []) {
+                bundleIDs += strings(directive["quit"]).filter(looksLikeBundleID)
+            }
+            for directive in (artifact["zap"] as? [[String: Any]] ?? []) {
+                bundleIDs += strings(directive["trash"]).compactMap(bundleIDFromPreferencePath)
+            }
         }
         guard !appNames.isEmpty || installsPkg else { return nil }
 
         let sha = fields["sha256"] as? String
-        return HomebrewCask(
+        var cask = HomebrewCask(
             token: token,
             name: (json["name"] as? [String])?.first ?? token,
             version: version,
@@ -87,6 +117,26 @@ public struct HomebrewCatalog: Sendable {
             appNames: appNames,
             installsPkg: installsPkg
         )
+        var seen = Set<String>()
+        cask.bundleIdentifiers = bundleIDs.filter { seen.insert($0.lowercased()).inserted }
+        return cask
+    }
+
+    private static func strings(_ value: Any?) -> [String] {
+        if let s = value as? String { return [s] }
+        return value as? [String] ?? []
+    }
+
+    private static func looksLikeBundleID(_ s: String) -> Bool {
+        let parts = s.split(separator: ".")
+        return parts.count >= 2 && !s.contains("/") && !s.contains("*") && !s.contains(" ")
+    }
+
+    /// "~/Library/Preferences/com.foo.bar.plist" → "com.foo.bar".
+    private static func bundleIDFromPreferencePath(_ path: String) -> String? {
+        guard path.contains("/Library/Preferences/"), path.hasSuffix(".plist") else { return nil }
+        let name = String((path as NSString).lastPathComponent.dropLast(".plist".count))
+        return looksLikeBundleID(name) ? name : nil
     }
 
     /// `"app": ["Foo.app"]` or `"app": ["Foo.app", {"target": "Bar.app"}]`.

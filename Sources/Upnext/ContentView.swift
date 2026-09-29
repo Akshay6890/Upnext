@@ -344,14 +344,20 @@ struct SourceBadge: View {
     let source: AvailableUpdate.Source
 
     var body: some View {
-        Text(source == .sparkle ? "Developer feed" : "Homebrew")
+        Text(source.isFromDeveloper ? "Developer feed" : "Homebrew")
             .font(.caption2.weight(.medium))
             .padding(.horizontal, 5)
             .padding(.vertical, 1)
             .background(Capsule().fill(Color.secondary.opacity(0.15)))
-            .help(source == .sparkle
-                  ? "Found through the update feed built into the app (Sparkle)."
-                  : "Found through the Homebrew cask catalog.")
+            .help(helpText)
+    }
+
+    private var helpText: String {
+        switch source {
+        case .sparkle: return "Found through the update feed built into the app (Sparkle)."
+        case .electron: return "Found through the app's own update server (electron-updater)."
+        case .homebrew: return "Found through the Homebrew cask catalog."
+        }
     }
 }
 

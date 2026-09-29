@@ -48,6 +48,18 @@ enum Verification {
         guard digest == expected.lowercased() else { throw VerificationError.checksumMismatch }
     }
 
+    /// electron-updater publishes a base64 SHA-512 of each download.
+    static func checkSHA512(of file: URL, expectedBase64: String?) throws {
+        guard let expectedBase64, let expected = Data(base64Encoded: expectedBase64) else { return }
+        let handle = try FileHandle(forReadingFrom: file)
+        defer { try? handle.close() }
+        var hasher = SHA512()
+        while let chunk = try handle.read(upToCount: 4 * 1024 * 1024), !chunk.isEmpty {
+            hasher.update(data: chunk)
+        }
+        guard Data(hasher.finalize()) == expected else { throw VerificationError.checksumMismatch }
+    }
+
     /// Verifies a Sparkle EdDSA signature the same way Sparkle does, using the
     /// public key embedded in the installed app.
     static func checkSparkleSignature(of file: URL, signature: String?, publicKey: String?) throws {

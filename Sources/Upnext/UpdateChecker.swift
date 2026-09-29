@@ -54,7 +54,7 @@ actor UpdateChecker {
         case .web: break
         }
 
-        let cask = catalog?.cask(forAppNamed: app.bundleFileName)
+        let cask = catalog?.cask(forAppNamed: app.bundleFileName, bundleIdentifier: app.bundleIdentifier)
         if let cask, AppScanner.isManagedByHomebrew(caskToken: cask.token) {
             return .managedElsewhere("Homebrew (brew upgrade --cask \(cask.token))")
         }
@@ -79,6 +79,26 @@ actor UpdateChecker {
             }
         }
 
+        // Electron apps using electron-updater publish a latest-mac.yml manifest.
+        var electronError: String?
+        if let feed = app.electronFeed {
+            do {
+                let (data, response) = try await session.data(from: feed.manifestURL)
+                if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+                    throw URLError(.badServerResponse)
+                }
+                if let release = ElectronRelease(manifestYAML: String(decoding: data, as: UTF8.self)) {
+                    if let update = UpdateMatcher.update(for: app, feed: feed, release: release) {
+                        return .updateAvailable(update)
+                    }
+                    return .upToDate(source: .electron)
+                }
+                electronError = "Update manifest was unreadable"
+            } catch {
+                electronError = "Couldn't read update manifest: \(error.localizedDescription)"
+            }
+        }
+
         if let cask {
             if let update = UpdateMatcher.update(for: app, cask: cask) {
                 return .updateAvailable(update)
@@ -86,7 +106,7 @@ actor UpdateChecker {
             return .upToDate(source: .homebrew)
         }
 
-        if let sparkleError { return .failed(sparkleError) }
+        if let sparkleError = sparkleError ?? electronError { return .failed(sparkleError) }
         return .untracked
     }
 

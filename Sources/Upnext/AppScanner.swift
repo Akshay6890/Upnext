@@ -17,7 +17,8 @@ enum AppScanner {
             for url in appBundles(in: directory, depth: 2) {
                 let path = url.resolvingSymlinksInPath().path
                 guard seen.insert(path).inserted,
-                      let app = InstalledApp.read(at: url, kind: classify) else { continue }
+                      var app = InstalledApp.read(at: url, kind: classify) else { continue }
+                if app.sparkleFeedURL == nil { app.sparkleFeedURL = feedFromPreferences(app.bundleIdentifier) }
                 apps.append(app)
             }
         }
@@ -46,6 +47,15 @@ enum AppScanner {
             }
         }
         return result
+    }
+
+    /// Some apps set their Sparkle feed at runtime instead of in Info.plist;
+    /// Sparkle then keeps it in the app's preferences.
+    private static func feedFromPreferences(_ bundleID: String) -> URL? {
+        guard let value = CFPreferencesCopyAppValue("SUFeedURL" as CFString, bundleID as CFString) as? String,
+              let url = URL(string: value.trimmingCharacters(in: .whitespaces)),
+              ["https", "http"].contains(url.scheme?.lowercased() ?? "") else { return nil }
+        return url
     }
 
     private static func classify(_ app: InstalledApp) -> InstalledApp.Kind {

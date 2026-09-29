@@ -13,6 +13,8 @@ public struct InstalledApp: Identifiable, Hashable, Sendable {
     public var sparkleFeedURL: URL?
     /// Base64 ed25519 public key (SUPublicEDKey) the app uses to verify Sparkle updates.
     public var sparklePublicEDKey: String?
+    /// electron-updater config (Contents/Resources/app-update.yml), if the app has one.
+    public var electronFeed: ElectronFeed?
     public var kind: Kind
 
     public enum Kind: String, Sendable {
@@ -72,6 +74,10 @@ public struct InstalledApp: Identifiable, Hashable, Sendable {
             sparklePublicEDKey: (plist["SUPublicEDKey"] as? String).flatMap { $0.isEmpty ? nil : $0 },
             kind: .web
         )
+        if let yml = try? String(contentsOf: url.appendingPathComponent("Contents/Resources/app-update.yml"),
+                                 encoding: .utf8) {
+            app.electronFeed = ElectronFeed(appUpdateYAML: yml)
+        }
         app.kind = kind(app)
         return app
     }
@@ -89,12 +95,18 @@ public struct InstalledApp: Identifiable, Hashable, Sendable {
 public struct AvailableUpdate: Hashable, Sendable {
     public enum Source: String, Sendable {
         case sparkle = "Sparkle feed"
+        case electron = "Electron update server"
         case homebrew = "Homebrew catalog"
+
+        /// Published by the app's own developer (vs. a third-party catalog).
+        public var isFromDeveloper: Bool { self != .homebrew }
     }
 
     public var newVersion: String
     public var downloadURL: URL
     public var expectedSHA256: String?
+    /// Base64 SHA-512 (what electron-updater publishes).
+    public var expectedSHA512Base64: String?
     public var expectedLength: Int64?
     public var edSignature: String?
     public var releaseNotesURL: URL?
@@ -102,11 +114,12 @@ public struct AvailableUpdate: Hashable, Sendable {
     public var source: Source
 
     public init(newVersion: String, downloadURL: URL, expectedSHA256: String? = nil,
-                expectedLength: Int64? = nil, edSignature: String? = nil, releaseNotesURL: URL? = nil,
+                expectedSHA512Base64: String? = nil, expectedLength: Int64? = nil, edSignature: String? = nil, releaseNotesURL: URL? = nil,
                 releaseNotesHTML: String? = nil, source: Source) {
         self.newVersion = newVersion
         self.downloadURL = downloadURL
         self.expectedSHA256 = expectedSHA256
+        self.expectedSHA512Base64 = expectedSHA512Base64
         self.expectedLength = expectedLength
         self.edSignature = edSignature
         self.releaseNotesURL = releaseNotesURL
@@ -137,7 +150,15 @@ public enum UpdateMatcher {
         let current = app.shortVersion.isEmpty ? app.buildVersion : app.shortVersion
         guard !current.isEmpty else { return nil }
         let candidate = cask.displayVersion
-        guard VersionComparator.isNewer(candidate, than: current) else { return nil }
+        // Casks often decorate the version with build hashes or suffixes
+        // ("3.6.6-8b85519e" for an app that reports "3.6.6"). Only a newer
+        // *numeric* version counts as an update.
+        if let candidateCore = VersionComparator.numericCore(candidate),
+           let currentCore = VersionComparator.numericCore(current) {
+            guard VersionComparator.isNewer(candidateCore, than: currentCore) else { return nil }
+        } else {
+            guard VersionComparator.isNewer(candidate, than: current) else { return nil }
+        }
         // Some casks version by build number instead ("12345" vs app "1.2"), or put
         // the build after a comma ("1.2,12345"). Either matching the installed build
         // means the app is current.

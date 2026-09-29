@@ -66,6 +66,28 @@ public enum VersionComparator {
         compare(candidate, current) == .orderedDescending
     }
 
+    /// The leading dotted-number part of a version: "3.6.6" for "3.6.6-8b85519e",
+    /// "v2.1" → "2.1", "1.2 (345)" → "1.2". nil when it doesn't start with a number.
+    public static func numericCore(_ version: String) -> String? {
+        var s = Substring(version.trimmingCharacters(in: .whitespaces))
+        if s.first == "v" || s.first == "V" { s = s.dropFirst() }
+        var core = ""
+        var lastWasDot = true
+        for ch in s {
+            if ch.isASCII && ch.isNumber {
+                core.append(ch)
+                lastWasDot = false
+            } else if ch == "." && !lastWasDot {
+                core.append(ch)
+                lastWasDot = true
+            } else {
+                break
+            }
+        }
+        while core.hasSuffix(".") { core.removeLast() }
+        return core.isEmpty ? nil : core
+    }
+
     private static func parts(of version: String) -> [Part] {
         var result: [Part] = []
         var buffer = ""

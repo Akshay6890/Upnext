@@ -88,6 +88,7 @@ struct Installer {
         phase(.verifying)
         try Verification.checkSize(of: file, expected: update.expectedLength)
         try Verification.checkSHA256(of: file, expected: update.expectedSHA256)
+        try Verification.checkSHA512(of: file, expectedBase64: update.expectedSHA512Base64)
         if update.source == .sparkle {
             try Verification.checkSparkleSignature(
                 of: file, signature: update.edSignature, publicKey: app.sparklePublicEDKey)
