@@ -69,6 +69,15 @@ else
     echo "    (the Command Line Tools alone can't build widgets), then re-run."
 fi
 
+# A fresh build number every build (e.g. 202609291012). Without it macOS's
+# widget service keeps running its cached copy of the old widget.
+BUILD_NUMBER="$(date +%Y%m%d%H%M)"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP/Contents/Info.plist"
+if [[ -d "$APPEX" ]]; then
+    /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APPEX/Contents/Info.plist"
+fi
+echo "==> Build number $BUILD_NUMBER"
+
 # App icon: PNG → .icns (the PNG is generated if it isn't checked out)
 [[ -f Resources/AppIcon.png ]] || python3 scripts/make-icon.py Resources/AppIcon.png
 ICONSET="$ROOT/build/AppIcon.iconset"

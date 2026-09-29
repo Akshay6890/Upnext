@@ -30,6 +30,8 @@ echo "==> Refreshing macOS's app and icon records"
 # Widget extension too, so the widget gallery picks up the new build.
 pluginkit -a "$DEST/Contents/PlugIns/UpnextWidget.appex" 2>/dev/null || true
 killall Dock 2>/dev/null || true
+# Restart the widget service so it loads the new widget instead of a cached one.
+killall chronod NotificationCenter 2>/dev/null || true
 
 echo "==> Opening Upnext"
 open "$DEST"
