@@ -2,18 +2,28 @@ import AppKit
 import SwiftUI
 import UpnextCore
 
-struct ContentView: View {
-    @EnvironmentObject var model: AppModel
-    @State private var search = ""
-    @State private var confirmQuit: ConfirmQuit?
-    @State private var releaseNotesFor: AppModel.Row?
-    @State private var showOtherApps = false
+/// Window-level UI state. Kept in an ObservableObject instead of `@State`
+/// because newer SDKs implement `@State` as a macro, and plain `swift build`
+/// can't always find SwiftUI's macro plugin.
+@MainActor
+final class WindowState: ObservableObject {
+    static let shared = WindowState()
+
+    @Published var search = ""
+    @Published var confirmQuit: ConfirmQuit?
+    @Published var releaseNotesFor: AppModel.Row?
+    @Published var showOtherApps = false
 
     struct ConfirmQuit: Identifiable {
         var id = UUID()
         var apps: [InstalledApp]
         var action: () -> Void
     }
+}
+
+struct ContentView: View {
+    @EnvironmentObject var model: AppModel
+    @EnvironmentObject var state: WindowState
 
     var body: some View {
         List {
@@ -29,37 +39,37 @@ struct ContentView: View {
             section("Can't Check Automatically", rows: model.untracked, style: .untracked)
             if !model.managedElsewhere.isEmpty {
                 Section {
-                    DisclosureGroup(isExpanded: $showOtherApps) {
+                    DisclosureGroup(isExpanded: $state.showOtherApps) {
                         ForEach(filtered(model.managedElsewhere)) { row in
                             AppRow(row: row, style: .managed)
                         }
                     } label: {
-                        Text("Updated elsewhere (App Store, Homebrew, Apple) — \(model.managedElsewhere.count)")
+                        Text(managedElsewhereTitle)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
         }
         .listStyle(.inset(alternatesRowBackgrounds: false))
-        .searchable(text: $search, placement: .toolbar, prompt: "Filter apps")
+        .searchable(text: $state.search, placement: .toolbar, prompt: "Filter apps")
         .toolbar { toolbar }
         .safeAreaInset(edge: .bottom) { statusBar }
         .frame(minWidth: 560, minHeight: 420)
         .navigationTitle("Upnext")
         .navigationSubtitle(subtitle)
-        .sheet(item: $releaseNotesFor) { row in
+        .sheet(item: $state.releaseNotesFor) { row in
             ReleaseNotesView(row: row)
         }
         .confirmationDialog(
-            quitTitle, isPresented: Binding(get: { confirmQuit != nil }, set: { if !$0 { confirmQuit = nil } }),
-            presenting: confirmQuit
+            quitTitle, isPresented: quitDialogShown,
+            presenting: state.confirmQuit
         ) { confirm in
             Button("Quit and Update") { confirm.action() }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
             Text("Upnext will quit the app, install the update and reopen it. Save any open work first.")
         }
-        .environment(\.showReleaseNotes, { releaseNotesFor = $0 })
+        .environment(\.showReleaseNotes, { [state] row in state.releaseNotesFor = row })
         .environment(\.requestInstall, requestInstall)
     }
 
@@ -99,6 +109,7 @@ struct ContentView: View {
     }
 
     private func filtered(_ rows: [AppModel.Row]) -> [AppModel.Row] {
+        let search = state.search
         guard !search.isEmpty else { return rows }
         return rows.filter { $0.app.name.localizedCaseInsensitiveContains(search) }
     }
@@ -151,8 +162,21 @@ struct ContentView: View {
         return count == 1 ? "1 update" : "\(count) updates"
     }
 
+    private var managedElsewhereTitle: String {
+        let count = model.managedElsewhere.count
+        return "Updated elsewhere (App Store, Homebrew, Apple) — \(count)"
+    }
+
+    private var quitDialogShown: Binding<Bool> {
+        let state = self.state
+        return Binding(
+            get: { state.confirmQuit != nil },
+            set: { shown in if !shown { state.confirmQuit = nil } }
+        )
+    }
+
     private var quitTitle: String {
-        guard let apps = confirmQuit?.apps else { return "" }
+        guard let apps = state.confirmQuit?.apps else { return "" }
         if apps.count == 1 { return "\(apps[0].name) is open" }
         return "\(apps.count) apps are open"
     }
@@ -161,7 +185,7 @@ struct ContentView: View {
 
     private func requestInstall(_ row: AppModel.Row) {
         if model.isRunning(row) {
-            confirmQuit = ConfirmQuit(apps: [row.app]) { model.install(row) }
+            state.confirmQuit = WindowState.ConfirmQuit(apps: [row.app]) { [model] in model.install(row) }
         } else {
             model.install(row)
         }
@@ -172,7 +196,7 @@ struct ContentView: View {
         if running.isEmpty {
             model.installAll()
         } else {
-            confirmQuit = ConfirmQuit(apps: running) { model.installAll() }
+            state.confirmQuit = WindowState.ConfirmQuit(apps: running) { [model] in model.installAll() }
         }
     }
 }

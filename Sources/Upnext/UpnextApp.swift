@@ -4,12 +4,15 @@ import SwiftUI
 @main
 struct UpnextApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var model = AppModel()
+    // Shared instances rather than @StateObject, which may also be a macro in newer SDKs.
+    private let model = AppModel.shared
+    private let windowState = WindowState.shared
 
     var body: some Scene {
         Window("Upnext", id: "main") {
             ContentView()
                 .environmentObject(model)
+                .environmentObject(windowState)
         }
         .defaultSize(width: 680, height: 560)
         .commands {
@@ -24,14 +27,23 @@ struct UpnextApp: App {
         MenuBarExtra {
             MenuBarContent().environmentObject(model)
         } label: {
-            let count = model.updates.count
-            Image(systemName: count > 0 ? "arrow.down.app.fill" : "arrow.down.app")
-            if count > 0 { Text("\(count)") }
+            MenuBarLabel().environmentObject(model)
         }
 
         Settings {
             SettingsView().environmentObject(model)
         }
+    }
+}
+
+/// A separate view so the count refreshes when the model changes.
+struct MenuBarLabel: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        let count = model.updates.count
+        Image(systemName: count > 0 ? "arrow.down.app.fill" : "arrow.down.app")
+        if count > 0 { Text("\(count)") }
     }
 }
 

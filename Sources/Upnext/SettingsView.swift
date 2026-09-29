@@ -6,7 +6,6 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.useHomebrew) private var useHomebrew = true
     @AppStorage(SettingsKey.autoCheckHours) private var autoCheckHours = 6
     @AppStorage(SettingsKey.notify) private var notify = true
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
         Form {
@@ -33,15 +32,7 @@ struct SettingsView: View {
                     .onChange(of: notify) { enabled in
                         if enabled { model.requestNotificationPermission() }
                     }
-                Toggle("Open Upnext at login", isOn: $launchAtLogin)
-                    .onChange(of: launchAtLogin) { enabled in
-                        do {
-                            if enabled { try SMAppService.mainApp.register() }
-                            else { try SMAppService.mainApp.unregister() }
-                        } catch {
-                            launchAtLogin = SMAppService.mainApp.status == .enabled
-                        }
-                    }
+                Toggle("Open Upnext at login", isOn: launchAtLogin)
             }
 
             Section("Skipped versions") {
@@ -62,6 +53,18 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 480)
         .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Reads and writes the login item directly, so no `@State` is needed.
+    private var launchAtLogin: Binding<Bool> {
+        Binding(
+            get: { SMAppService.mainApp.status == .enabled },
+            set: { enabled in
+                if enabled { try? SMAppService.mainApp.register() }
+                else { try? SMAppService.mainApp.unregister() }
+                model.objectWillChange.send()
+            }
+        )
     }
 
     private func appName(for bundleID: String) -> String {

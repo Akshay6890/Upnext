@@ -11,11 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Toolchain
-        run: swift --version
+      - name: Use the newest Xcode on the runner
+        run: |
+          XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+          swift --version
 
       - name: Test
-        run: swift test
+        run: swift test --build-system native
 
       - name: Build Upnext.app
         run: scripts/build-app.sh --dmg

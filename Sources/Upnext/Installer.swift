@@ -258,7 +258,7 @@ actor MountTracker {
 
     func detachAll() async {
         for mount in mountPoints.reversed() {
-            try? await Shell.run("/usr/bin/hdiutil", ["detach", mount.path, "-force"], allowFailure: true)
+            _ = try? await Shell.run("/usr/bin/hdiutil", ["detach", mount.path, "-force"], allowFailure: true)
             try? FileManager.default.removeItem(at: mount.deletingLastPathComponent())
         }
         mountPoints.removeAll()

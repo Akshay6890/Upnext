@@ -24,6 +24,8 @@ enum SettingsKey {
 
 @MainActor
 final class AppModel: ObservableObject {
+    static let shared = AppModel()
+
     @Published private(set) var apps: [InstalledApp] = []
     @Published private(set) var results: [String: CheckResult] = [:]
     @Published private(set) var installStates: [String: InstallState] = [:]
