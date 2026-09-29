@@ -1,0 +1,257 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		24A7E85C6E4DC624D649E3D2 /* UpnextWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26CE39737E57F158853EB89 /* UpnextWidget.swift */; };
+		E0EB69F33AD473AAC5BEC02C /* Appcast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25254828CCD6AFE21C69118B /* Appcast.swift */; };
+		05A6995EFDB7DA7C4C8872B8 /* HomebrewCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6D9957F5B7A8C8361A3D8F5 /* HomebrewCatalog.swift */; };
+		CFF8D1494E9C38198ECC560D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 351BF1CDD97FCFA2791B71EA /* Models.swift */; };
+		C3DAD3C9BAF9D103181CC208 /* Version.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6079C4408DB694504631B3CB /* Version.swift */; };
+		1C3A615AB549736E8E46A557 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE0D2A334246E13EA2D7D7D /* WidgetSnapshot.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B26CE39737E57F158853EB89 /* UpnextWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UpnextWidget.swift; path = Sources/UpnextWidget/UpnextWidget.swift; sourceTree = SOURCE_ROOT; };
+		25254828CCD6AFE21C69118B /* Appcast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Appcast.swift; path = Sources/UpnextCore/Appcast.swift; sourceTree = SOURCE_ROOT; };
+		E6D9957F5B7A8C8361A3D8F5 /* HomebrewCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HomebrewCatalog.swift; path = Sources/UpnextCore/HomebrewCatalog.swift; sourceTree = SOURCE_ROOT; };
+		351BF1CDD97FCFA2791B71EA /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Models.swift; path = Sources/UpnextCore/Models.swift; sourceTree = SOURCE_ROOT; };
+		6079C4408DB694504631B3CB /* Version.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Version.swift; path = Sources/UpnextCore/Version.swift; sourceTree = SOURCE_ROOT; };
+		FDE0D2A334246E13EA2D7D7D /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WidgetSnapshot.swift; path = Sources/UpnextCore/WidgetSnapshot.swift; sourceTree = SOURCE_ROOT; };
+		BB5944C6515D6D2B678426AB /* UpnextWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "UpnextWidget-Info.plist"; path = "Resources/UpnextWidget-Info.plist"; sourceTree = SOURCE_ROOT; };
+		86B3BC083DF59791BE56CFAE /* UpnextWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = UpnextWidget.entitlements; path = Resources/UpnextWidget.entitlements; sourceTree = SOURCE_ROOT; };
+		F5BF48AA40CAD7891EB709FC /* UpnextWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = UpnextWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4F6F5CC3FCCF73F75AE9CCF4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2B731CEFC6751AAE0EC69B98 = {
+			isa = PBXGroup;
+			children = (
+				3AF7E71D86EA58D9E0F75F28,
+				6181C844C135BE67318DCF39,
+				307A90002D1285ED8C05A9E0,
+				0A2C978E52A76F0AA9F68BB5,
+			);
+			sourceTree = "<group>";
+		};
+		3AF7E71D86EA58D9E0F75F28 = {
+			isa = PBXGroup;
+			children = (
+				B26CE39737E57F158853EB89,
+			);
+			name = UpnextWidget;
+			sourceTree = "<group>";
+		};
+		6181C844C135BE67318DCF39 = {
+			isa = PBXGroup;
+			children = (
+				25254828CCD6AFE21C69118B,
+				E6D9957F5B7A8C8361A3D8F5,
+				351BF1CDD97FCFA2791B71EA,
+				6079C4408DB694504631B3CB,
+				FDE0D2A334246E13EA2D7D7D,
+			);
+			name = UpnextCore;
+			sourceTree = "<group>";
+		};
+		307A90002D1285ED8C05A9E0 = {
+			isa = PBXGroup;
+			children = (
+				BB5944C6515D6D2B678426AB,
+				86B3BC083DF59791BE56CFAE,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		0A2C978E52A76F0AA9F68BB5 = {
+			isa = PBXGroup;
+			children = (
+				F5BF48AA40CAD7891EB709FC,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		42AEFBAE01D2DFD981F7DA7D /* UpnextWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE2BB50980DFD48FF547D497;
+			buildPhases = (
+				F2AB5FB218DA8B84623F4557,
+				4F6F5CC3FCCF73F75AE9CCF4,
+				55B558C7EF820E6E00E5993B,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UpnextWidget;
+			productName = UpnextWidget;
+			productReference = F5BF48AA40CAD7891EB709FC;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		46F86FAA6BBF9AC94A7E4595 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = 01076EBF22530E406F54B419;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2B731CEFC6751AAE0EC69B98;
+			productRefGroup = 0A2C978E52A76F0AA9F68BB5;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				42AEFBAE01D2DFD981F7DA7D,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		55B558C7EF820E6E00E5993B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F2AB5FB218DA8B84623F4557 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				24A7E85C6E4DC624D649E3D2,
+				E0EB69F33AD473AAC5BEC02C,
+				05A6995EFDB7DA7C4C8872B8,
+				CFF8D1494E9C38198ECC560D,
+				C3DAD3C9BAF9D103181CC208,
+				1C3A615AB549736E8E46A557,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6F0B85FC643AF9C218F627EA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ENABLE_MODULES = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		1B05A9D10F61E514E88AF240 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ENABLE_MODULES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E67DED621DA82404399DCDC1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Resources/UpnextWidget.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Resources/UpnextWidget-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.upnext.Upnext.Widget;
+				PRODUCT_NAME = UpnextWidget;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+			};
+			name = Debug;
+		};
+		8951287761002419191396D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Resources/UpnextWidget.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Resources/UpnextWidget-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.upnext.Upnext.Widget;
+				PRODUCT_NAME = UpnextWidget;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		01076EBF22530E406F54B419 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6F0B85FC643AF9C218F627EA,
+				1B05A9D10F61E514E88AF240,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE2BB50980DFD48FF547D497 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E67DED621DA82404399DCDC1,
+				8951287761002419191396D2,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
+}

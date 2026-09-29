@@ -1,7 +1,11 @@
 import AppKit
 import SwiftUI
-import UpnextCore
 import WidgetKit
+// Under SwiftPM the shared code is a separate module. The Xcode widget target
+// (UpnextWidget.xcodeproj) compiles those files straight into the extension.
+#if canImport(UpnextCore)
+import UpnextCore
+#endif
 
 @main
 struct UpnextWidgetBundle: WidgetBundle {

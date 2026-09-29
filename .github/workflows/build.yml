@@ -28,6 +28,8 @@ jobs:
         run: |
           APPEX=build/Upnext.app/Contents/PlugIns/UpnextWidget.appex
           test -x "$APPEX/Contents/MacOS/UpnextWidget"
+          # Built by Xcode as a real extension, not a wrapped SwiftPM binary.
+          plutil -extract DTPlatformName raw "$APPEX/Contents/Info.plist"
           codesign -d --entitlements - "$APPEX" 2>&1 | grep -q app-sandbox
           plutil -lint "$APPEX/Contents/Info.plist"
 

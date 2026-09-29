@@ -74,8 +74,11 @@ killall NotificationCenter chronod 2>/dev/null
 
 ## Build & install
 
-You need macOS 14 (Sonoma) or later on Apple silicon, plus Xcode or the Command
-Line Tools (`xcode-select --install`).
+You need macOS 14 (Sonoma) or later on Apple silicon. The app builds with just
+the Command Line Tools (`xcode-select --install`). The **widget needs Xcode**
+(free from the App Store), because macOS only runs widgets built as a real
+Xcode app extension. Without Xcode, the script builds the app and skips the
+widget.
 
 ```sh
 git clone https://github.com/akshay6890/upnext.git
@@ -123,7 +126,7 @@ Sources/
     HomebrewCatalog.swift  Homebrew cask API parser
     Models.swift           InstalledApp, AvailableUpdate, UpdateMatcher
     WidgetSnapshot.swift   data shared between the app and the widget
-  UpnextWidget/          the WidgetKit widget (bundled as UpnextWidget.appex)
+  UpnextWidget/          the WidgetKit widget, built by UpnextWidget.xcodeproj
   Upnext/                the macOS app
     UpnextApp.swift        app entry, menu bar extra
     AppModel.swift         state: scanning, checking, installing, skipping
@@ -136,7 +139,8 @@ Sources/
     ContentView.swift      main window
     ReleaseNotesView.swift
     SettingsView.swift
-Resources/               Info.plist, AppIcon.png
+UpnextWidget.xcodeproj   Xcode app-extension target for the widget
+Resources/               Info.plists, widget entitlements, AppIcon.png
 scripts/build-app.sh     builds and signs Upnext.app (and optionally a DMG)
 ```
 

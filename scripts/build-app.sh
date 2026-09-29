@@ -42,11 +42,32 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/Upnext" "$APP/Contents/MacOS/Upnext"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 
-# Widget extension
+# Widget extension. It has to be a real Xcode app-extension build: on macOS 26+
+# a SwiftPM executable wrapped in an .appex starts and then crashes.
 APPEX="$APP/Contents/PlugIns/UpnextWidget.appex"
-mkdir -p "$APPEX/Contents/MacOS"
-cp "$BIN_DIR/UpnextWidget" "$APPEX/Contents/MacOS/UpnextWidget"
-cp Resources/UpnextWidget-Info.plist "$APPEX/Contents/Info.plist"
+XCODE_DEV=""
+if [[ "$(xcode-select -p 2>/dev/null)" == *.app/Contents/Developer ]]; then
+    XCODE_DEV="$(xcode-select -p)"
+else
+    for candidate in /Applications/Xcode.app /Applications/Xcode*.app; do
+        if [[ -d "$candidate/Contents/Developer" ]]; then
+            XCODE_DEV="$candidate/Contents/Developer"
+            break
+        fi
+    done
+fi
+if [[ -n "$XCODE_DEV" ]]; then
+    echo "==> Building widget extension (Xcode at ${XCODE_DEV%/Contents/Developer})"
+    DEVELOPER_DIR="$XCODE_DEV" xcodebuild -quiet \
+        -project UpnextWidget.xcodeproj -target UpnextWidget -configuration Release \
+        SYMROOT="$ROOT/build/xcode" OBJROOT="$ROOT/build/xcode/obj" \
+        CODE_SIGNING_ALLOWED=NO build
+    mkdir -p "$APP/Contents/PlugIns"
+    cp -R "$ROOT/build/xcode/Release/UpnextWidget.appex" "$APPEX"
+else
+    echo "!!  Xcode not found: skipping the widget. Install Xcode from the App Store"
+    echo "    (the Command Line Tools alone can't build widgets), then re-run."
+fi
 
 # App icon: PNG → .icns (the PNG is generated if it isn't checked out)
 [[ -f Resources/AppIcon.png ]] || python3 scripts/make-icon.py Resources/AppIcon.png
@@ -67,7 +88,9 @@ if [[ "$IDENTITY" != "-" ]]; then
     SIGN_ARGS+=(--options runtime --timestamp)
 fi
 # Inside out: the extension first (it must be sandboxed), then the app.
-codesign "${SIGN_ARGS[@]}" --entitlements Resources/UpnextWidget.entitlements "$APPEX"
+if [[ -d "$APPEX" ]]; then
+    codesign "${SIGN_ARGS[@]}" --entitlements Resources/UpnextWidget.entitlements "$APPEX"
+fi
 codesign "${SIGN_ARGS[@]}" "$APP"
 codesign --verify --strict --deep "$APP"
 
