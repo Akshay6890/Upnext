@@ -33,7 +33,7 @@ struct UpnextApp: App {
         Settings {
             SettingsView().environmentObject(model)
                 .fontDesign(.rounded)
-                .tint(Brand.green)
+                .tint(Brand.blue)
                 .preferredColorScheme(.dark)
         }
     }

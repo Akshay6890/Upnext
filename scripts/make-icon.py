@@ -17,7 +17,7 @@ BORDER_ALPHA, BORDER_W = 0.08, 3.0
 SHADOW_ALPHA, SHADOW_SIGMA, SHADOW_DY = 0.35, 14.0, 10.0
 
 # Glyph: stroked polylines with round caps and joins
-GLYPH = (0x7C, 0xC4, 0x7F)
+GLYPH = (0x6F, 0xA8, 0xF5)
 STROKE = 44.0
 POLYLINES = [
     [(512, 648), (512, 312)],               # shaft

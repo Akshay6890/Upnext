@@ -56,12 +56,12 @@ struct ContentView: View {
         .frame(minWidth: 580, minHeight: 440)
         .navigationTitle("Upnext")
         .fontDesign(.rounded)
-        .tint(Brand.green)
+        .tint(Brand.blue)
         .preferredColorScheme(.dark)
         .sheet(item: $state.releaseNotesFor) { row in
             ReleaseNotesView(row: row)
                 .fontDesign(.rounded)
-                .tint(Brand.green)
+                .tint(Brand.blue)
                 .preferredColorScheme(.dark)
         }
         .confirmationDialog(
@@ -97,7 +97,7 @@ struct ContentView: View {
                 ProgressView(value: Double(model.checkedCount),
                              total: Double(max(model.checkableCount, 1)))
                     .progressViewStyle(.linear)
-                    .tint(Brand.green)
+                    .tint(Brand.blue)
             }
         }
     }
@@ -120,7 +120,7 @@ struct ContentView: View {
             HStack(spacing: 14) {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: 30))
-                    .foregroundStyle(Brand.green)
+                    .foregroundStyle(Brand.blue)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("You're all set").font(.system(.headline, design: .rounded))
                     Text("Upnext checked \(model.checkableCount) apps.")
@@ -315,7 +315,7 @@ struct AppRow: View {
             HStack(spacing: 6) {
                 Text(row.app.shortVersion.isEmpty ? row.app.buildVersion : row.app.shortVersion)
                 Image(systemName: "arrow.right").font(.system(size: 9, weight: .bold))
-                Text(update.newVersion).foregroundStyle(Brand.green).fontWeight(.semibold)
+                Text(update.newVersion).foregroundStyle(Brand.blue).fontWeight(.semibold)
                 SourceBadge(source: update.source)
                 if update.releaseNotesHTML != nil || update.releaseNotesURL != nil {
                     Button("Release Notes") { showReleaseNotes(row) }
@@ -343,7 +343,7 @@ struct AppRow: View {
             InstallProgress(phase: phase) { model.cancelInstall(row) }
         case let .installed(version)?:
             Label("Updated to \(version)", systemImage: "checkmark.circle.fill")
-                .foregroundStyle(Brand.green)
+                .foregroundStyle(Brand.blue)
                 .font(.system(.callout, design: .rounded).weight(.medium))
         case .installerOpened?:
             Label("Finish in Installer", systemImage: "shippingbox")
@@ -417,11 +417,11 @@ struct SourceBadge: View {
     var body: some View {
         Text(source.isFromDeveloper ? "Developer" : "Homebrew")
             .font(.system(size: 10, weight: .semibold, design: .rounded))
-            .foregroundStyle(source.isFromDeveloper ? Brand.green : Color.secondary)
+            .foregroundStyle(source.isFromDeveloper ? Brand.blue : Color.secondary)
             .padding(.horizontal, 7)
             .padding(.vertical, 2)
             .background(Capsule().fill(source.isFromDeveloper
-                                       ? Brand.green.opacity(0.14) : Color.white.opacity(0.08)))
+                                       ? Brand.blue.opacity(0.14) : Color.white.opacity(0.08)))
             .help(helpText)
     }
 
@@ -442,9 +442,9 @@ struct InstallProgress: View {
         HStack(spacing: 8) {
             VStack(alignment: .trailing, spacing: 2) {
                 if case let .downloading(fraction) = phase, fraction > 0 {
-                    ProgressView(value: fraction).frame(width: 120).tint(Brand.green)
+                    ProgressView(value: fraction).frame(width: 120).tint(Brand.blue)
                 } else {
-                    ProgressView().progressViewStyle(.linear).frame(width: 120).tint(Brand.green)
+                    ProgressView().progressViewStyle(.linear).frame(width: 120).tint(Brand.blue)
                 }
                 Text(label).font(.caption2).foregroundStyle(.secondary)
             }
@@ -490,7 +490,7 @@ struct SectionTitle: View {
     }
 }
 
-/// The app icon drawn in SwiftUI (Design/AppIcon.svg): graphite tile, green arrow.
+/// The app icon drawn in SwiftUI (Design/AppIcon.svg): graphite tile, blue arrow.
 struct AppLogo: View {
     let size: CGFloat
 
@@ -500,7 +500,7 @@ struct AppLogo: View {
             .fill(LinearGradient(colors: [Brand.graphiteTop, Brand.graphiteBottom],
                                  startPoint: .top, endPoint: .bottom))
             .overlay(shape.strokeBorder(Brand.hairline, lineWidth: 1))
-            .overlay(LogoGlyph().stroke(Brand.green, style: StrokeStyle(
+            .overlay(LogoGlyph().stroke(Brand.blue, style: StrokeStyle(
                 lineWidth: size * 0.053, lineCap: .round, lineJoin: .round)))
             .frame(width: size, height: size)
             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)

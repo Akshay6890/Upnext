@@ -22,7 +22,7 @@
   </g>
 
   <!-- Up arrow over a baseline: "what's up next" -->
-  <g fill="none" stroke="#7CC47F" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+  <g fill="none" stroke="#6FA8F5" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
     <path d="M512 648 L512 312"/>
     <path d="M370 454 L512 312 L654 454"/>
     <path d="M364 736 L660 736"/>
