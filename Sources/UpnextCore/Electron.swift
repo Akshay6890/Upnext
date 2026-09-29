@@ -23,7 +23,7 @@ public struct ElectronFeed: Equatable, Hashable, Sendable {
         let fields = yaml.fields
         channel = fields["channel"].flatMap { $0.isEmpty ? nil : $0 } ?? "latest"
 
-        switch fields["provider"] {
+        switch fields["provider"] ?? "" {
         case "generic":
             guard let raw = fields["url"], let url = URL(string: raw) else { return nil }
             provider = .generic(url)
