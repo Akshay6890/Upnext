@@ -25,7 +25,13 @@ public struct ElectronFeed: Equatable, Hashable, Sendable {
 
         switch fields["provider"] ?? "" {
         case "generic":
-            guard let raw = fields["url"], let url = URL(string: raw) else { return nil }
+            // electron-builder allows ${os}/${arch}/${channel} placeholders in the URL.
+            let channel = self.channel
+            guard let raw = fields["url"]?
+                    .replacingOccurrences(of: "${os}", with: "mac")
+                    .replacingOccurrences(of: "${arch}", with: "arm64")
+                    .replacingOccurrences(of: "${channel}", with: channel),
+                  let url = URL(string: raw) else { return nil }
             provider = .generic(url)
         case "github":
             guard let owner = fields["owner"], let repo = fields["repo"] else { return nil }
@@ -46,18 +52,28 @@ public struct ElectronFeed: Equatable, Hashable, Sendable {
         }
     }
 
-    private var manifestName: String { "\(channel)-mac.yml" }
-
     /// Where latest-mac.yml lives.
-    public var manifestURL: URL {
-        switch provider {
-        case let .generic(base):
-            return base.appendingPathComponent(manifestName)
-        case let .github(owner, repo):
-            // GitHub redirects this to the newest release's asset; no API token needed.
-            return URL(string: "https://github.com/\(owner)/\(repo)/releases/latest/download/\(manifestName)")!
+    public var manifestURL: URL { manifestURLs[0] }
+
+    /// Candidate manifest locations: the app's channel first, then the default
+    /// "latest" channel (some apps name a channel that only exists for Windows).
+    public var manifestURLs: [URL] {
+        var names = ["\(channel)-mac.yml"]
+        if channel != "latest" { names.append("latest-mac.yml") }
+        return names.map { name in
+            switch provider {
+            case let .generic(base):
+                return base.appendingPathComponent(name)
+            case let .github(owner, repo):
+                // GitHub redirects this to the newest release's asset; no API token needed.
+                return URL(string: "https://github.com/\(owner)/\(repo)/releases/latest/download/\(name)")!
+            }
         }
     }
+
+    /// electron-updater identifies itself like this; some update servers and
+    /// CDNs refuse other clients.
+    public static let userAgent = "electron-builder"
 
     /// Resolves a file name from the manifest to a download URL.
     public func downloadURL(for file: String) -> URL? {

@@ -82,20 +82,14 @@ actor UpdateChecker {
         // Electron apps using electron-updater publish a latest-mac.yml manifest.
         var electronError: String?
         if let feed = app.electronFeed {
-            do {
-                let (data, response) = try await session.data(from: feed.manifestURL)
-                if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-                    throw URLError(.badServerResponse)
+            switch await fetchElectronRelease(feed) {
+            case let .success(release):
+                if let update = UpdateMatcher.update(for: app, feed: feed, release: release) {
+                    return .updateAvailable(update)
                 }
-                if let release = ElectronRelease(manifestYAML: String(decoding: data, as: UTF8.self)) {
-                    if let update = UpdateMatcher.update(for: app, feed: feed, release: release) {
-                        return .updateAvailable(update)
-                    }
-                    return .upToDate(source: .electron)
-                }
-                electronError = "Update manifest was unreadable"
-            } catch {
-                electronError = "Couldn't read update manifest: \(error.localizedDescription)"
+                return .upToDate(source: .electron)
+            case let .failure(message):
+                electronError = message
             }
         }
 
@@ -108,6 +102,47 @@ actor UpdateChecker {
 
         if let sparkleError = sparkleError ?? electronError { return .failed(sparkleError) }
         return .untracked
+    }
+
+    private enum ElectronFetch {
+        case success(ElectronRelease)
+        case failure(String)
+    }
+
+    private nonisolated func fetchElectronRelease(_ feed: ElectronFeed) async -> ElectronFetch {
+        var lastProblem = "The developer's update server didn't respond"
+        for url in feed.manifestURLs {
+            var request = URLRequest(url: url)
+            request.setValue(ElectronFeed.userAgent, forHTTPHeaderField: "User-Agent")
+            request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+            do {
+                let (data, response) = try await session.data(for: request)
+                let status = (response as? HTTPURLResponse)?.statusCode ?? 200
+                guard (200..<300).contains(status) else {
+                    lastProblem = Self.describe(status: status)
+                    continue
+                }
+                if let release = ElectronRelease(manifestYAML: String(decoding: data, as: UTF8.self)) {
+                    return .success(release)
+                }
+                lastProblem = "The developer's update server sent something unexpected"
+            } catch let error as URLError {
+                lastProblem = error.code == .notConnectedToInternet
+                    ? "You're offline"
+                    : "The developer's update server couldn't be reached"
+            } catch {
+                lastProblem = "The developer's update server couldn't be reached"
+            }
+        }
+        return .failure(lastProblem)
+    }
+
+    private static func describe(status: Int) -> String {
+        switch status {
+        case 401, 403: return "The developer's update server only answers the app itself (HTTP \(status))"
+        case 404: return "The developer doesn't publish update info at the expected address (HTTP 404)"
+        default: return "The developer's update server returned an error (HTTP \(status))"
+        }
     }
 
     // MARK: Homebrew catalog
