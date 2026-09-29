@@ -51,7 +51,6 @@ struct ContentView: View {
         .background(TransparentWindow())
         .searchable(text: $state.search, placement: .toolbar, prompt: "Filter apps")
         .toolbar { toolbar }
-        .toolbar(removing: .title)
         .toolbarBackground(.hidden, for: .windowToolbar)
         .frame(minWidth: 580, minHeight: 440)
         .navigationTitle("Upnext")

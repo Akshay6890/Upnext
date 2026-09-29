@@ -63,6 +63,8 @@ struct TransparentWindow: NSViewRepresentable {
     private func configure(_ window: NSWindow?) {
         guard let window else { return }
         window.titlebarAppearsTransparent = true
+        // The header shows the name; `.toolbar(removing: .title)` needs macOS 15.
+        window.titleVisibility = .hidden
         window.isOpaque = false
         window.backgroundColor = .clear
         window.styleMask.insert(.fullSizeContentView)
