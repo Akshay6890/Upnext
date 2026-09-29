@@ -39,6 +39,31 @@ Apps installed by an administrator (for example, through a `.pkg`) prompt for
 your password. If macOS blocks the replacement, Upnext links you to
 **System Settings › Privacy & Security › App Management**.
 
+### Widget
+
+Upnext includes a desktop and Notification Center widget in three sizes:
+
+- **Small:** the number of updates, with the icons of the first few apps.
+- **Medium and large:** the apps with updates and their versions (current → new),
+  plus an **Update All** button.
+
+Clicking **Update All** updates every app that isn't open, in the background.
+If some apps are open, Upnext brings up its window and asks before quitting
+them. Clicking anywhere else on the widget opens Upnext.
+
+To add it, install and open Upnext once. Then right-click the desktop (or
+open Notification Center), choose **Edit Widgets**, search for **Upnext** and
+drag it into place. The widget refreshes whenever Upnext finishes a check or
+an install, so keep Upnext running in the menu bar.
+
+If Upnext doesn't appear in the widget gallery, open the app once from
+`/Applications`, then run:
+
+```sh
+pluginkit -a /Applications/Upnext.app/Contents/PlugIns/UpnextWidget.appex
+killall NotificationCenter chronod 2>/dev/null
+```
+
 ### Other features
 
 - Menu bar item with a count of available updates.
@@ -56,7 +81,7 @@ Line Tools (`xcode-select --install`).
 git clone https://github.com/akshay6890/upnext.git
 cd upnext
 scripts/build-app.sh          # → build/Upnext.app
-cp -R build/Upnext.app /Applications/
+rm -rf /Applications/Upnext.app && cp -R build/Upnext.app /Applications/
 open /Applications/Upnext.app
 ```
 
@@ -97,6 +122,8 @@ Sources/
     Appcast.swift          Sparkle appcast (RSS) parser
     HomebrewCatalog.swift  Homebrew cask API parser
     Models.swift           InstalledApp, AvailableUpdate, UpdateMatcher
+    WidgetSnapshot.swift   data shared between the app and the widget
+  UpnextWidget/          the WidgetKit widget (bundled as UpnextWidget.appex)
   Upnext/                the macOS app
     UpnextApp.swift        app entry, menu bar extra
     AppModel.swift         state: scanning, checking, installing, skipping
@@ -105,6 +132,7 @@ Sources/
     Downloader.swift       download with progress
     Verification.swift     EdDSA, sha256, code-signature / Team ID checks
     Installer.swift        unpack dmg/zip/tar/pkg, quit, replace, relaunch
+    WidgetPublisher.swift  writes the widget snapshot + icons, reloads the widget
     ContentView.swift      main window
     ReleaseNotesView.swift
     SettingsView.swift

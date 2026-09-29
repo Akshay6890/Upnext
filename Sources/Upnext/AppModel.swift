@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Foundation
 import UpnextCore
 import UserNotifications
@@ -39,6 +40,7 @@ final class AppModel: ObservableObject {
     private var autoCheckTask: Task<Void, Never>?
     private var installTasks: [String: Task<Void, Never>] = [:]
     private var notifiedVersions = Set<String>()
+    private var widgetSync: AnyCancellable?
 
     init() {
         UserDefaults.standard.register(defaults: [
@@ -48,6 +50,14 @@ final class AppModel: ObservableObject {
         ])
         ignoredVersions = UserDefaults.standard.dictionary(forKey: SettingsKey.ignored) as? [String: String] ?? [:]
         scheduleAutoCheck()
+        // Keep the widget in step with whatever the window shows.
+        widgetSync = objectWillChange
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                MainActor.assumeIsolated {
+                    if let self { WidgetPublisher.publish(from: self) }
+                }
+            }
         Task { await refresh() }
     }
 
@@ -201,6 +211,34 @@ final class AppModel: ObservableObject {
     func installAll() {
         // One at a time keeps bandwidth and password prompts sane.
         let queue = updates.filter { installStates[$0.id]?.isWorking != true }
+        Task {
+            for row in queue {
+                install(row)
+                await installTasks[row.id]?.value
+            }
+        }
+    }
+
+    /// Installs every update whose app isn't open, without asking. Returns the
+    /// apps that are open, which need the user's go-ahead to be quit.
+    @discardableResult
+    func installAllNotRunning() -> [InstalledApp] {
+        let running = runningAppsWithUpdates
+        let runningIDs = Set(running.map(\.id))
+        let queue = updates.filter { !runningIDs.contains($0.id) && installStates[$0.id]?.isWorking != true }
+        Task {
+            for row in queue {
+                install(row)
+                await installTasks[row.id]?.value
+            }
+        }
+        return running
+    }
+
+    /// Installs updates for just these apps, one after another.
+    func install(apps: [InstalledApp]) {
+        let ids = Set(apps.map(\.id))
+        let queue = updates.filter { ids.contains($0.id) && installStates[$0.id]?.isWorking != true }
         Task {
             for row in queue {
                 install(row)

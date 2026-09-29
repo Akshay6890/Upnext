@@ -24,6 +24,7 @@ final class WindowState: ObservableObject {
 struct ContentView: View {
     @EnvironmentObject var model: AppModel
     @EnvironmentObject var state: WindowState
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         List {
@@ -71,6 +72,7 @@ struct ContentView: View {
         }
         .environment(\.showReleaseNotes, { [state] row in state.releaseNotesFor = row })
         .environment(\.requestInstall, requestInstall)
+        .onAppear { WindowOpener.action = openWindow }
     }
 
     // MARK: Pieces
@@ -96,7 +98,13 @@ struct ContentView: View {
             Section {
                 ForEach(visible) { row in AppRow(row: row, style: style) }
             } header: {
-                Text("\(title) (\(visible.count))")
+                HStack {
+                    Text("\(title) (\(visible.count))")
+                    Spacer()
+                    if style == .update {
+                        updateAllButton
+                    }
+                }
             } footer: {
                 if style == .untracked {
                     Text("These apps don't publish an update feed and aren't in the Homebrew catalog. "
@@ -129,15 +137,18 @@ struct ContentView: View {
                 .help("Check for updates")
             }
         }
-        ToolbarItem(placement: .primaryAction) {
-            Button {
-                requestInstallAll()
-            } label: {
-                Label("Update All", systemImage: "square.and.arrow.down.on.square")
-            }
-            .disabled(model.updates.isEmpty)
-            .help("Install all available updates")
-        }
+    }
+
+    /// Plain text button at the top right of the updates list.
+    private var updateAllButton: some View {
+        let allBusy = model.updates.allSatisfy { model.installStates[$0.id]?.isWorking == true }
+        return Button("Update All") { requestInstallAll() }
+            .buttonStyle(.borderless)
+            .font(.callout.weight(.semibold))
+            .foregroundStyle(Color.accentColor)
+            .textCase(nil)
+            .disabled(allBusy)
+            .help("Install all available updates, one after another")
     }
 
     private var statusBar: some View {

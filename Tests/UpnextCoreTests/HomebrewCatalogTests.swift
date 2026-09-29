@@ -85,3 +85,21 @@ final class HomebrewCatalogTests: XCTestCase {
         XCTAssertNil(HomebrewCatalog.platformKey(majorOSVersion: 99, arm64: true))
     }
 }
+
+final class WidgetSnapshotTests: XCTestCase {
+    func testRoundTripsThroughJSON() throws {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        var snapshot = WidgetSnapshot.placeholder
+        snapshot.lastChecked = Date(timeIntervalSince1970: 1_800_000_000)
+        let decoded = try decoder.decode(WidgetSnapshot.self, from: encoder.encode(snapshot))
+        XCTAssertEqual(decoded, snapshot)
+    }
+
+    func testIconFileNamesAreSafe() {
+        XCTAssertEqual(WidgetStore.iconFile(for: "com.example/evil").lastPathComponent, "com.example_evil.png")
+    }
+}

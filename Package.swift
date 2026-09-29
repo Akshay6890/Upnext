@@ -6,6 +6,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [
         .executable(name: "Upnext", targets: ["Upnext"]),
+        .executable(name: "UpnextWidget", targets: ["UpnextWidget"]),
     ],
     targets: [
         // Platform-independent logic: version comparison, Sparkle appcast parsing,
@@ -14,6 +15,12 @@ let package = Package(
         // The macOS app: SwiftUI UI, scanning, downloading and installing.
         .executableTarget(
             name: "Upnext",
+            dependencies: ["UpnextCore"]
+        ),
+        // The WidgetKit extension. build-app.sh wraps it into
+        // Upnext.app/Contents/PlugIns/UpnextWidget.appex.
+        .executableTarget(
+            name: "UpnextWidget",
             dependencies: ["UpnextCore"]
         ),
         .testTarget(

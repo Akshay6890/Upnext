@@ -34,13 +34,19 @@ fi
 
 echo "==> Compiling (arm64, release)"
 swift build "${BUILD_FLAGS[@]}"
-BIN="$(swift build "${BUILD_FLAGS[@]}" --show-bin-path)/Upnext"
+BIN_DIR="$(swift build "${BUILD_FLAGS[@]}" --show-bin-path)"
 
 echo "==> Assembling $APP"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BIN" "$APP/Contents/MacOS/Upnext"
+cp "$BIN_DIR/Upnext" "$APP/Contents/MacOS/Upnext"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+
+# Widget extension
+APPEX="$APP/Contents/PlugIns/UpnextWidget.appex"
+mkdir -p "$APPEX/Contents/MacOS"
+cp "$BIN_DIR/UpnextWidget" "$APPEX/Contents/MacOS/UpnextWidget"
+cp Resources/UpnextWidget-Info.plist "$APPEX/Contents/Info.plist"
 
 # App icon: PNG → .icns (the PNG is generated if it isn't checked out)
 [[ -f Resources/AppIcon.png ]] || python3 scripts/make-icon.py Resources/AppIcon.png
@@ -56,12 +62,14 @@ rm -rf "$ICONSET"
 
 echo "==> Signing"
 IDENTITY="${SIGN_IDENTITY:--}"
-if [[ "$IDENTITY" == "-" ]]; then
-    codesign --force --sign - "$APP"
-else
-    codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
+SIGN_ARGS=(--force --sign "$IDENTITY")
+if [[ "$IDENTITY" != "-" ]]; then
+    SIGN_ARGS+=(--options runtime --timestamp)
 fi
-codesign --verify --strict "$APP"
+# Inside out: the extension first (it must be sandboxed), then the app.
+codesign "${SIGN_ARGS[@]}" --entitlements Resources/UpnextWidget.entitlements "$APPEX"
+codesign "${SIGN_ARGS[@]}" "$APP"
+codesign --verify --strict --deep "$APP"
 
 if [[ $MAKE_DMG == 1 ]]; then
     echo "==> Making DMG"
@@ -76,4 +84,5 @@ if [[ $MAKE_DMG == 1 ]]; then
 fi
 
 echo "==> Done: $APP"
-echo "    Install with:  cp -R build/Upnext.app /Applications/"
+echo "    Install with:  rm -rf /Applications/Upnext.app && cp -R build/Upnext.app /Applications/"
+echo "    Then open it once; the widget appears under Edit Widgets → Upnext."

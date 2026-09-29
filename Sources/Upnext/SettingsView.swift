@@ -18,10 +18,10 @@ struct SettingsView: View {
                     Text("Every 12 hours").tag(12)
                     Text("Every day").tag(24)
                 }
-                .onChange(of: autoCheckHours) { _ in model.scheduleAutoCheck() }
+                .onChange(of: autoCheckHours) { model.scheduleAutoCheck() }
 
                 Toggle("Use the Homebrew catalog for apps without an update feed", isOn: $useHomebrew)
-                    .onChange(of: useHomebrew) { _ in model.homebrewSettingChanged() }
+                    .onChange(of: useHomebrew) { model.homebrewSettingChanged() }
                 Text("Upnext first asks each app's own update feed (Sparkle). For apps that don't have one, "
                      + "it looks up the latest version in the public Homebrew cask catalog. "
                      + "Homebrew doesn't need to be installed.")
@@ -29,7 +29,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
 
                 Toggle("Notify me when updates are found", isOn: $notify)
-                    .onChange(of: notify) { enabled in
+                    .onChange(of: notify) { _, enabled in
                         if enabled { model.requestNotificationPermission() }
                     }
                 Toggle("Open Upnext at login", isOn: launchAtLogin)
