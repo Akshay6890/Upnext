@@ -84,8 +84,7 @@ widget.
 git clone https://github.com/akshay6890/upnext.git
 cd upnext
 scripts/build-app.sh          # → build/Upnext.app
-rm -rf /Applications/Upnext.app && cp -R build/Upnext.app /Applications/
-open /Applications/Upnext.app
+scripts/install.sh            # → /Applications/Upnext.app, refreshes icon caches, opens it
 ```
 
 `scripts/build-app.sh --dmg` also makes `build/Upnext.dmg`. Each push to GitHub
@@ -143,6 +142,7 @@ UpnextWidget.xcodeproj   Xcode app-extension target for the widget
 Design/AppIcon.svg       the app icon (scripts/make-icon.py renders it to Resources/AppIcon.png)
 Resources/               Info.plists, widget entitlements, AppIcon.png
 scripts/build-app.sh     builds and signs Upnext.app (and optionally a DMG)
+scripts/install.sh       installs it and makes macOS forget old copies (icons, widget)
 ```
 
 ## Limitations

@@ -107,5 +107,4 @@ if [[ $MAKE_DMG == 1 ]]; then
 fi
 
 echo "==> Done: $APP"
-echo "    Install with:  rm -rf /Applications/Upnext.app && cp -R build/Upnext.app /Applications/"
-echo "    Then open it once; the widget appears under Edit Widgets → Upnext."
+echo "    Install with:  scripts/install.sh"
