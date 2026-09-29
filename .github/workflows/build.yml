@@ -1,0 +1,26 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15   # Apple silicon
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: swift --version
+
+      - name: Test
+        run: swift test
+
+      - name: Build Upnext.app
+        run: scripts/build-app.sh --dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Upnext
+          path: build/Upnext.dmg
