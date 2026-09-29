@@ -212,12 +212,13 @@ struct ContentView: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
+            // Plain toolbar button: macOS already draws its own glass behind it.
             Button {
                 Task { await model.refresh() }
             } label: {
-                Image(systemName: "arrow.clockwise")
+                Label("Check for Updates", systemImage: "arrow.clockwise")
             }
-            .buttonStyle(CircleIconButtonStyle())
+            .pointingHandCursor(!model.isChecking)
             .disabled(model.isChecking)
             .keyboardShortcut("r")
             .help("Check for updates (⌘R)")
@@ -324,7 +325,9 @@ struct AppRow: View {
         case let .managedElsewhere(by)?:
             Text("\(row.app.displayVersion) · \(by)")
         case let .failed(message)?:
-            Text("\(row.app.displayVersion) · \(message)")
+            // The section footer already explains; the details are a hover away.
+            Text(row.app.displayVersion)
+                .help(message)
         case .upToDate(let source)?:
             HStack(spacing: 6) {
                 Text(row.app.displayVersion)
