@@ -12,14 +12,18 @@ struct ReleaseNotesView: View {
             HStack(spacing: 10) {
                 AppIcon(url: row.app.url).frame(width: 28, height: 28)
                 VStack(alignment: .leading) {
-                    Text("\(row.app.name) \(row.update?.newVersion ?? "")").font(.headline)
+                    Text("\(row.app.name) \(row.update?.newVersion ?? "")")
+                        .font(.system(.headline, design: .rounded))
                     Text("You have \(row.app.displayVersion)").font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
                 if let url = row.update?.releaseNotesURL {
                     Button("Open in Browser") { NSWorkspace.shared.open(url) }
+                        .buttonStyle(PillButtonStyle())
                 }
-                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+                Button("Done") { dismiss() }
+                    .buttonStyle(PillButtonStyle(prominent: true))
+                    .keyboardShortcut(.defaultAction)
             }
             .padding(12)
             Divider()

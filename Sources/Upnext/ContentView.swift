@@ -27,39 +27,42 @@ struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        List {
-            if model.updates.isEmpty && !model.isChecking && model.lastChecked != nil {
-                allCaughtUp
-            }
-            section("Updates Available", rows: model.updates, style: .update)
-            if model.isChecking && !model.pending.isEmpty {
-                section("Checking…", rows: model.pending, style: .plain)
-            }
-            section("Skipped Versions", rows: model.ignoredUpdates, style: .ignored)
-            section("Up to Date", rows: model.upToDate, style: .plain)
-            section("Can't Check Automatically", rows: model.untracked, style: .untracked)
-            if !model.managedElsewhere.isEmpty {
-                Section {
-                    DisclosureGroup(isExpanded: $state.showOtherApps) {
-                        ForEach(filtered(model.managedElsewhere)) { row in
-                            AppRow(row: row, style: .managed)
-                        }
-                    } label: {
-                        Text(managedElsewhereTitle)
-                            .foregroundStyle(.secondary)
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                header
+                if model.updates.isEmpty && !model.isChecking && model.lastChecked != nil {
+                    allCaughtUp
                 }
+                section("Updates Available", rows: model.updates, style: .update)
+                if model.isChecking && !model.pending.isEmpty {
+                    section("Checking", rows: model.pending, style: .plain)
+                }
+                section("Skipped Versions", rows: model.ignoredUpdates, style: .ignored)
+                section("Up to Date", rows: model.upToDate, style: .plain)
+                section("Can't Check Automatically", rows: model.untracked, style: .untracked)
+                managedElsewhereSection
             }
+            .padding(.horizontal, 22)
+            .padding(.top, 6)
+            .padding(.bottom, 22)
         }
-        .listStyle(.inset(alternatesRowBackgrounds: false))
+        .scrollContentBackground(.hidden)
+        .background(GlassBackground())
+        .background(TransparentWindow())
         .searchable(text: $state.search, placement: .toolbar, prompt: "Filter apps")
         .toolbar { toolbar }
-        .safeAreaInset(edge: .bottom) { statusBar }
-        .frame(minWidth: 560, minHeight: 420)
+        .toolbar(removing: .title)
+        .toolbarBackground(.hidden, for: .windowToolbar)
+        .frame(minWidth: 580, minHeight: 440)
         .navigationTitle("Upnext")
-        .navigationSubtitle(subtitle)
+        .fontDesign(.rounded)
+        .tint(Brand.blue)
+        .preferredColorScheme(.dark)
         .sheet(item: $state.releaseNotesFor) { row in
             ReleaseNotesView(row: row)
+                .fontDesign(.rounded)
+                .tint(Brand.blue)
+                .preferredColorScheme(.dark)
         }
         .confirmationDialog(
             quitTitle, isPresented: quitDialogShown,
@@ -77,40 +80,125 @@ struct ContentView: View {
 
     // MARK: Pieces
 
-    private var allCaughtUp: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.largeTitle)
-                .foregroundStyle(.green)
-            VStack(alignment: .leading) {
-                Text("Everything is up to date").font(.headline)
-                Text("Upnext checked \(model.checkableCount) apps.")
-                    .foregroundStyle(.secondary)
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 12) {
+                AppLogo(size: 38)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Upnext")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                    Text(statusLine)
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            if model.isChecking {
+                ProgressView(value: Double(model.checkedCount),
+                             total: Double(max(model.checkableCount, 1)))
+                    .progressViewStyle(.linear)
+                    .tint(Brand.blue)
             }
         }
-        .padding(.vertical, 12)
+    }
+
+    private var statusLine: String {
+        if model.isChecking {
+            return "Checking \(model.checkedCount) of \(model.checkableCount) apps…"
+        }
+        let count = model.updates.count
+        let updates = count == 0 ? "Everything is up to date"
+            : count == 1 ? "1 update ready" : "\(count) updates ready"
+        if let last = model.lastChecked {
+            return "\(updates) · checked \(last.formatted(.relative(presentation: .named)))"
+        }
+        return updates
+    }
+
+    private var allCaughtUp: some View {
+        GlassCard {
+            HStack(spacing: 14) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(Brand.blue)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("You're all set").font(.system(.headline, design: .rounded))
+                    Text("Upnext checked \(model.checkableCount) apps.")
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(16)
+        }
     }
 
     @ViewBuilder
     private func section(_ title: String, rows: [AppModel.Row], style: AppRow.Style) -> some View {
         let visible = filtered(rows)
         if !visible.isEmpty {
-            Section {
-                ForEach(visible) { row in AppRow(row: row, style: style) }
-            } header: {
-                HStack {
-                    Text("\(title) (\(visible.count))")
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline) {
+                    SectionTitle(title: title, count: visible.count)
                     Spacer()
                     if style == .update {
                         updateAllButton
                     }
                 }
-            } footer: {
+                .padding(.horizontal, 4)
+
+                GlassCard {
+                    ForEach(Array(visible.enumerated()), id: \.element.id) { index, row in
+                        AppRow(row: row, style: style)
+                        if index < visible.count - 1 {
+                            Rectangle().fill(Brand.hairline).frame(height: 1).padding(.leading, 64)
+                        }
+                    }
+                }
+
                 if style == .untracked {
-                    Text("These apps don't publish an update feed and aren't in the Homebrew catalog. "
-                         + "Check the developer's website, or use the app's own “Check for Updates” menu.")
+                    Text("These apps don't publish update information Upnext can read. "
+                         + "Use the app's own “Check for Updates” menu, or the developer's website.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var managedElsewhereSection: some View {
+        let rows = filtered(model.managedElsewhere)
+        if !rows.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { state.showOtherApps.toggle() }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                            .rotationEffect(.degrees(state.showOtherApps ? 90 : 0))
+                        SectionTitle(title: "Updated Elsewhere", count: rows.count)
+                        Text("App Store · Homebrew · Apple")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .foregroundStyle(.secondary)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .pointingHandCursor()
+                .padding(.horizontal, 4)
+
+                if state.showOtherApps {
+                    GlassCard {
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                            AppRow(row: row, style: .managed)
+                            if index < rows.count - 1 {
+                                Rectangle().fill(Brand.hairline).frame(height: 1).padding(.leading, 64)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -125,52 +213,26 @@ struct ContentView: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
-            if model.isChecking {
-                ProgressView().controlSize(.small)
-            } else {
-                Button {
-                    Task { await model.refresh() }
-                } label: {
-                    Label("Check for Updates", systemImage: "arrow.clockwise")
-                }
-                .keyboardShortcut("r")
-                .help("Check for updates")
+            Button {
+                Task { await model.refresh() }
+            } label: {
+                Image(systemName: "arrow.clockwise")
             }
+            .buttonStyle(CircleIconButtonStyle())
+            .disabled(model.isChecking)
+            .keyboardShortcut("r")
+            .help("Check for updates (⌘R)")
         }
     }
 
-    /// Plain text button at the top right of the updates list.
+    /// Text button at the top right of the updates list.
     private var updateAllButton: some View {
         let allBusy = model.updates.allSatisfy { model.installStates[$0.id]?.isWorking == true }
         return Button("Update All") { requestInstallAll() }
-            .buttonStyle(.borderless)
-            .font(.callout.weight(.semibold))
-            .foregroundStyle(Color.accentColor)
-            .textCase(nil)
+            .buttonStyle(LinkButtonStyle())
+            .font(.system(.callout, design: .rounded).weight(.semibold))
             .disabled(allBusy)
             .help("Install all available updates, one after another")
-    }
-
-    private var statusBar: some View {
-        HStack {
-            if model.isChecking {
-                Text("Checking \(model.checkedCount) of \(model.checkableCount) apps…")
-            } else if let last = model.lastChecked {
-                Text("Last checked \(last.formatted(.relative(presentation: .named)))")
-            }
-            Spacer()
-        }
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(.bar)
-    }
-
-    private var subtitle: String {
-        let count = model.updates.count
-        if count == 0 { return model.isChecking ? "Checking…" : "Up to date" }
-        return count == 1 ? "1 update" : "\(count) updates"
     }
 
     private var managedElsewhereTitle: String {
@@ -224,21 +286,25 @@ struct AppRow: View {
     let style: Style
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             AppIcon(url: row.app.url)
                 .frame(width: 36, height: 36)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(row.app.name).font(.body.weight(.medium))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(row.app.name)
+                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .lineLimit(1)
                 detail
-                    .font(.caption)
+                    .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
             Spacer(minLength: 12)
             trailing
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .contentShape(Rectangle())
         .contextMenu { menu }
     }
 
@@ -247,11 +313,13 @@ struct AppRow: View {
         switch row.result {
         case let .updateAvailable(update)?:
             HStack(spacing: 6) {
-                Text("\(row.app.shortVersion.isEmpty ? row.app.buildVersion : row.app.shortVersion) → \(update.newVersion)")
+                Text(row.app.shortVersion.isEmpty ? row.app.buildVersion : row.app.shortVersion)
+                Image(systemName: "arrow.right").font(.system(size: 9, weight: .bold))
+                Text(update.newVersion).foregroundStyle(Brand.blue).fontWeight(.semibold)
                 SourceBadge(source: update.source)
                 if update.releaseNotesHTML != nil || update.releaseNotesURL != nil {
                     Button("Release Notes") { showReleaseNotes(row) }
-                        .buttonStyle(.link)
+                        .buttonStyle(LinkButtonStyle())
                 }
             }
         case let .managedElsewhere(by)?:
@@ -275,8 +343,8 @@ struct AppRow: View {
             InstallProgress(phase: phase) { model.cancelInstall(row) }
         case let .installed(version)?:
             Label("Updated to \(version)", systemImage: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .font(.callout)
+                .foregroundStyle(Brand.blue)
+                .font(.system(.callout, design: .rounded).weight(.medium))
         case .installerOpened?:
             Label("Finish in Installer", systemImage: "shippingbox")
                 .font(.callout)
@@ -291,17 +359,20 @@ struct AppRow: View {
                         NSWorkspace.shared.open(URL(string:
                             "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles")!)
                     }
+                    .buttonStyle(PillButtonStyle())
                 }
                 Button("Retry") { requestInstall(row) }
+                    .buttonStyle(PillButtonStyle())
             }
             .frame(maxWidth: 260, alignment: .trailing)
         case nil:
             switch style {
             case .update:
                 Button("Update") { requestInstall(row) }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(PillButtonStyle(prominent: true))
             case .ignored:
                 Button("Unskip") { model.unignore(bundleIdentifier: row.app.bundleIdentifier) }
+                    .buttonStyle(PillButtonStyle())
             case .plain, .untracked, .managed:
                 EmptyView()
             }
@@ -344,11 +415,13 @@ struct SourceBadge: View {
     let source: AvailableUpdate.Source
 
     var body: some View {
-        Text(source.isFromDeveloper ? "Developer feed" : "Homebrew")
-            .font(.caption2.weight(.medium))
-            .padding(.horizontal, 5)
-            .padding(.vertical, 1)
-            .background(Capsule().fill(Color.secondary.opacity(0.15)))
+        Text(source.isFromDeveloper ? "Developer" : "Homebrew")
+            .font(.system(size: 10, weight: .semibold, design: .rounded))
+            .foregroundStyle(source.isFromDeveloper ? Brand.blue : Color.secondary)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(source.isFromDeveloper
+                                       ? Brand.blue.opacity(0.14) : Color.white.opacity(0.08)))
             .help(helpText)
     }
 
@@ -369,17 +442,17 @@ struct InstallProgress: View {
         HStack(spacing: 8) {
             VStack(alignment: .trailing, spacing: 2) {
                 if case let .downloading(fraction) = phase, fraction > 0 {
-                    ProgressView(value: fraction).frame(width: 110)
+                    ProgressView(value: fraction).frame(width: 120).tint(Brand.blue)
                 } else {
-                    ProgressView().progressViewStyle(.linear).frame(width: 110)
+                    ProgressView().progressViewStyle(.linear).frame(width: 120).tint(Brand.blue)
                 }
                 Text(label).font(.caption2).foregroundStyle(.secondary)
             }
             if case .downloading = phase {
                 Button(action: cancel) {
-                    Image(systemName: "xmark.circle.fill")
+                    Image(systemName: "xmark")
                 }
-                .buttonStyle(.borderless)
+                .buttonStyle(CircleIconButtonStyle(size: 22))
                 .help("Cancel")
             }
         }
@@ -393,6 +466,59 @@ struct InstallProgress: View {
         case .waitingForAppToQuit: return "Quitting app…"
         case .installing: return "Installing…"
         }
+    }
+}
+
+/// Section heading: small caps-style title plus a count pill.
+struct SectionTitle: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(title.uppercased())
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .tracking(0.8)
+                .foregroundStyle(.secondary)
+            Text("\(count)")
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1)
+                .background(Capsule().fill(Color.white.opacity(0.08)))
+        }
+    }
+}
+
+/// The app icon drawn in SwiftUI (Design/AppIcon.svg): graphite tile, blue arrow.
+struct AppLogo: View {
+    let size: CGFloat
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: size * 0.226, style: .continuous)
+        shape
+            .fill(LinearGradient(colors: [Brand.graphiteTop, Brand.graphiteBottom],
+                                 startPoint: .top, endPoint: .bottom))
+            .overlay(shape.strokeBorder(Brand.hairline, lineWidth: 1))
+            .overlay(LogoGlyph().stroke(Brand.blue, style: StrokeStyle(
+                lineWidth: size * 0.053, lineCap: .round, lineJoin: .round)))
+            .frame(width: size, height: size)
+            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+    }
+}
+
+/// The icon's arrow-over-baseline, in tile coordinates (100…924 on the 1024 grid).
+struct LogoGlyph: Shape {
+    func path(in rect: CGRect) -> Path {
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + (x - 100) / 824 * rect.width,
+                    y: rect.minY + (y - 100) / 824 * rect.height)
+        }
+        var path = Path()
+        path.move(to: p(512, 648)); path.addLine(to: p(512, 312))
+        path.move(to: p(370, 454)); path.addLine(to: p(512, 312)); path.addLine(to: p(654, 454))
+        path.move(to: p(364, 736)); path.addLine(to: p(660, 736))
+        return path
     }
 }
 

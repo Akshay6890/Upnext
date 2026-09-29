@@ -116,8 +116,8 @@ struct UpdatesWidgetView: View {
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
-                            .background(Capsule().fill(Color.accentColor))
-                            .foregroundStyle(.white)
+                            .background(Capsule().fill(LogoMark.glyphColor))
+                            .foregroundStyle(Color(red: 0x0B / 255, green: 0x14 / 255, blue: 0x22 / 255))
                     }
                 }
             }

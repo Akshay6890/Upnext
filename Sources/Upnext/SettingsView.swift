@@ -19,9 +19,11 @@ struct SettingsView: View {
                     Text("Every day").tag(24)
                 }
                 .onChange(of: autoCheckHours) { model.scheduleAutoCheck() }
+                .pointingHandCursor()
 
                 Toggle("Use the Homebrew catalog for apps without an update feed", isOn: $useHomebrew)
                     .onChange(of: useHomebrew) { model.homebrewSettingChanged() }
+                    .pointingHandCursor()
                 Text("Upnext first asks each app's own update feed (Sparkle). For apps that don't have one, "
                      + "it looks up the latest version in the public Homebrew cask catalog. "
                      + "Homebrew doesn't need to be installed.")
@@ -32,7 +34,9 @@ struct SettingsView: View {
                     .onChange(of: notify) { _, enabled in
                         if enabled { model.requestNotificationPermission() }
                     }
+                    .pointingHandCursor()
                 Toggle("Open Upnext at login", isOn: launchAtLogin)
+                    .pointingHandCursor()
             }
 
             Section("Skipped versions") {
@@ -45,6 +49,7 @@ struct SettingsView: View {
                             Text(entry.value).foregroundStyle(.secondary)
                             Spacer()
                             Button("Unskip") { model.unignore(bundleIdentifier: entry.key) }
+                                .buttonStyle(PillButtonStyle())
                         }
                     }
                 }

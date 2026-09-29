@@ -32,6 +32,9 @@ struct UpnextApp: App {
 
         Settings {
             SettingsView().environmentObject(model)
+                .fontDesign(.rounded)
+                .tint(Brand.blue)
+                .preferredColorScheme(.dark)
         }
     }
 }
