@@ -24,7 +24,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/Upnext"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 
-# App icon: PNG → .icns
+# App icon: PNG → .icns (the PNG is generated if it isn't checked out)
+[[ -f Resources/AppIcon.png ]] || python3 scripts/make-icon.py Resources/AppIcon.png
 ICONSET="$ROOT/build/AppIcon.iconset"
 rm -rf "$ICONSET" && mkdir -p "$ICONSET"
 for size in 16 32 128 256 512; do
