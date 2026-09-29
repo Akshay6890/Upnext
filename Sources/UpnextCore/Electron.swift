@@ -21,12 +21,12 @@ public struct ElectronFeed: Equatable, Hashable, Sendable {
     public init?(appUpdateYAML: String) {
         let yaml = SimpleYAML.parse(appUpdateYAML)
         let fields = yaml.fields
-        channel = fields["channel"].flatMap { $0.isEmpty ? nil : $0 } ?? "latest"
+        let channel = fields["channel"].flatMap { $0.isEmpty ? nil : $0 } ?? "latest"
+        self.channel = channel
 
         switch fields["provider"] ?? "" {
         case "generic":
             // electron-builder allows ${os}/${arch}/${channel} placeholders in the URL.
-            let channel = self.channel
             guard let raw = fields["url"]?
                     .replacingOccurrences(of: "${os}", with: "mac")
                     .replacingOccurrences(of: "${arch}", with: "arm64")

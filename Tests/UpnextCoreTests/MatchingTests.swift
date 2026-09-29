@@ -78,6 +78,15 @@ final class ElectronTests: XCTestCase {
                        "https://github.com/acme/widget-app/releases/latest/download/App-arm64.zip")
     }
 
+    func testURLPlaceholdersAndChannelFallback() throws {
+        let yaml = "provider: generic\nurl: https://updates.example.com/${os}/${arch}\nchannel: stable\n"
+        let feed = try XCTUnwrap(ElectronFeed(appUpdateYAML: yaml))
+        XCTAssertEqual(feed.manifestURLs.map(\.absoluteString), [
+            "https://updates.example.com/mac/arm64/stable-mac.yml",
+            "https://updates.example.com/mac/arm64/latest-mac.yml",
+        ])
+    }
+
     func testUnknownProviderIsIgnored() {
         XCTAssertNil(ElectronFeed(appUpdateYAML: "provider: keygen\naccount: x"))
         XCTAssertNil(ElectronFeed(appUpdateYAML: ""))
