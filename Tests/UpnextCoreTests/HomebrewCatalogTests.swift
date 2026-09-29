@@ -99,6 +99,19 @@ final class WidgetSnapshotTests: XCTestCase {
         XCTAssertEqual(decoded, snapshot)
     }
 
+    func testFriendlyDate() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let now = Date(timeIntervalSince1970: 1_800_000_000) // a fixed afternoon
+        XCTAssertTrue(WidgetStore.friendlyDate(now.addingTimeInterval(-600), now: now, calendar: calendar)
+            .hasPrefix("Today at "))
+        XCTAssertTrue(WidgetStore.friendlyDate(now.addingTimeInterval(-86_400), now: now, calendar: calendar)
+            .hasPrefix("Yesterday at "))
+        let older = WidgetStore.friendlyDate(now.addingTimeInterval(-5 * 86_400), now: now, calendar: calendar)
+        XCTAssertFalse(older.hasPrefix("Today") || older.hasPrefix("Yesterday"))
+        XCTAssertFalse(older.contains("sec"))
+    }
+
     func testIconFileNamesAreSafe() {
         XCTAssertEqual(WidgetStore.iconFile(for: "com.example/evil").lastPathComponent, "com.example_evil.png")
     }

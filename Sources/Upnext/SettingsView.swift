@@ -15,6 +15,7 @@ struct SettingsView: View {
                     Text("Every hour").tag(1)
                     Text("Every 3 hours").tag(3)
                     Text("Every 6 hours").tag(6)
+                    Text("Every 10 hours").tag(10)
                     Text("Every 12 hours").tag(12)
                     Text("Every day").tag(24)
                 }

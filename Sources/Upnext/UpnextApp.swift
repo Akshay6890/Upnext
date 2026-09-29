@@ -143,7 +143,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case "refresh":
             Task { await model.refresh() }
         default:
+            // Small widgets are one big tap target (their refresh icon included),
+            // so opening from a widget also checks, unless we just did.
             WindowOpener.showMain()
+            if let last = model.lastChecked, Date().timeIntervalSince(last) < 60 { break }
+            Task { await model.refresh() }
         }
     }
 

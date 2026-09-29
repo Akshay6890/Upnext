@@ -42,9 +42,10 @@ struct Provider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        // Upnext pushes a reload whenever something changes; this is just a fallback.
+        // Upnext pushes a reload whenever it finishes a check or an install;
+        // otherwise refresh every 10 hours.
         let entry = Entry(date: Date(), snapshot: WidgetStore.load())
-        completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(30 * 60))))
+        completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(10 * 60 * 60))))
     }
 }
 
@@ -67,59 +68,64 @@ struct UpdatesWidgetView: View {
         .widgetURL(WidgetStore.openURL)
     }
 
-    // Small: a count and a few icons.
+    // Small: logo + refresh on top, the count in the middle, last check at the bottom.
     private var small: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
                 LogoMark(size: 22)
                 Spacer()
-                IconStack(updates: Array(updates.prefix(3)))
+                RefreshButton()
             }
             Spacer(minLength: 4)
             if entry.snapshot == nil {
                 Text("Open Upnext")
-                    .font(.headline)
+                    .font(.system(.headline, design: .rounded))
                 Text("to check for updates")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if updates.isEmpty {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(LogoMark.glyphColor)
                 Text("Up to date")
-                    .font(.headline)
+                    .font(.system(.headline, design: .rounded))
                     .padding(.top, 2)
-                lastChecked.font(.caption2).foregroundStyle(.secondary)
             } else {
-                Text("\(updates.count)")
-                    .font(.system(size: 36, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("\(updates.count)")
+                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                    IconStack(updates: Array(updates.prefix(3)))
+                }
                 Text(updates.count == 1 ? "update" : "updates")
-                    .font(.subheadline)
+                    .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.secondary)
             }
+            Spacer(minLength: 4)
+            footer
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
-    // Medium / large: header with Update All, then one row per app.
+    // Medium / large: header with Update All + refresh, one row per app, last check at the bottom.
     private func list(maxRows: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 LogoMark(size: 20)
                 Text(headline)
-                    .font(.headline)
+                    .font(.system(.headline, design: .rounded))
                 Spacer()
                 if updates.contains(where: { !$0.isInstalling }) {
                     Link(destination: WidgetStore.updateAllURL) {
                         Text("Update All")
-                            .font(.caption.weight(.semibold))
+                            .font(.system(.caption, design: .rounded).weight(.semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(Capsule().fill(LogoMark.glyphColor))
                             .foregroundStyle(Color(red: 0x0B / 255, green: 0x14 / 255, blue: 0x22 / 255))
                     }
                 }
+                RefreshButton()
             }
 
             if entry.snapshot == nil {
@@ -131,9 +137,9 @@ struct UpdatesWidgetView: View {
             } else if updates.isEmpty {
                 Spacer()
                 HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(LogoMark.glyphColor)
                     Text("All \(entry.snapshot?.appCount ?? 0) apps are up to date")
-                        .font(.callout)
+                        .font(.system(.callout, design: .rounded))
                 }
                 Spacer()
             } else {
@@ -150,9 +156,7 @@ struct UpdatesWidgetView: View {
                 Spacer(minLength: 0)
             }
 
-            if family == .systemLarge, entry.snapshot != nil {
-                lastChecked.font(.caption2).foregroundStyle(.tertiary)
-            }
+            footer
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -166,10 +170,32 @@ struct UpdatesWidgetView: View {
         }
     }
 
+    /// "Last checked Today at 9:41 AM" — a fixed time, not a ticking timer.
     @ViewBuilder
-    private var lastChecked: some View {
-        if let date = entry.snapshot?.lastChecked {
-            Text("Checked ") + Text(date, style: .relative) + Text(" ago")
+    private var footer: some View {
+        if entry.snapshot?.isChecking == true {
+            Text("Checking now…")
+                .font(.system(.caption2, design: .rounded))
+                .foregroundStyle(.secondary)
+        } else if let date = entry.snapshot?.lastChecked {
+            Text("Last checked \(WidgetStore.friendlyDate(date))")
+                .font(.system(.caption2, design: .rounded))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+    }
+}
+
+/// Small round button that asks Upnext to check now.
+struct RefreshButton: View {
+    var body: some View {
+        Link(destination: WidgetStore.refreshURL) {
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.secondary)
+                .frame(width: 22, height: 22)
+                .background(Circle().fill(Color.primary.opacity(0.08)))
         }
     }
 }

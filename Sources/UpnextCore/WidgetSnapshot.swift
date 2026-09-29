@@ -49,6 +49,22 @@ public enum WidgetStore {
     public static let urlScheme = "upnext"
     public static let openURL = URL(string: "upnext://open")!
     public static let updateAllURL = URL(string: "upnext://update-all")!
+    public static let refreshURL = URL(string: "upnext://refresh")!
+
+    /// "Today at 9:41 AM", "Yesterday at 9:41 AM", or "Sep 28, 9:41 AM".
+    /// A fixed string on purpose: a live relative timer ticks every second.
+    public static func friendlyDate(_ date: Date, now: Date = Date(),
+                                    calendar: Calendar = .current) -> String {
+        let time = date.formatted(date: .omitted, time: .shortened)
+        if calendar.isDate(date, inSameDayAs: now) { return "Today at \(time)" }
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
+           calendar.isDate(date, inSameDayAs: yesterday) { return "Yesterday at \(time)" }
+        let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
+        let day = sameYear
+            ? date.formatted(.dateTime.month(.abbreviated).day())
+            : date.formatted(.dateTime.month(.abbreviated).day().year())
+        return "\(day), \(time)"
+    }
 
     /// The real home folder, even from inside a sandbox (where NSHomeDirectory()
     /// points at the container).
